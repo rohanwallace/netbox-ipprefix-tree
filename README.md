@@ -31,9 +31,9 @@ The plugin is currently intended for use with NetBox 4.5.x. Compatibility with e
 
 ## Installation
 
-Install the package into the NetBox virtual environment:
+To install the package into the NetBox virtual environment, download the latest .tar.gz from GitHub and decompress it.
 
-If installing from a local source directory:
+Then run the following commands:
 
 ```bash
 cd /path/to/netbox-ipprefix-tree
