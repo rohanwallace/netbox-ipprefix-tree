@@ -1,0 +1,30 @@
+{% load render_table from django_tables2 %}
+{% load static %}
+
+{% for row in table.rows %}
+<tr class="tree-row" data-node-type="prefix" data-prefix="{{ row.record.prefix }}" data-vrf-id="{{ vrf }}"
+    data-depth="{{ depth }}" data-prefix-id="{{ row.record.id }}" data-expanded="false"
+    data-has-children="{% if row.record.has_children %}true{% else %}false{% endif %}">
+    {% for column, cell in row.items %}
+        <td>
+            {% if column.name == 'prefix' %}
+                <div class="tree-prefix-cell" style="padding-left: {{ depth|add:1 }}em;">
+                    {% if row.record.has_children %}
+                        <img class="tree-expand-icon" src="{% static 'netbox_ipprefix_tree/icons/collapsed.svg' %}"
+                            alt="Expand prefix" role="button">
+                    {% else %}
+                        <img class="tree-expand-icon" src="{% static 'netbox_ipprefix_tree/icons/leaf.svg' %}"
+                            alt="No child prefixes">
+                    {% endif %}
+
+                    <a href="{{ row.record.get_absolute_url }}">
+                        {{ row.record.prefix }}
+                    </a>
+                </div>
+            {% else %}
+                {{ cell }}
+            {% endif %}
+        </td>
+    {% endfor %}
+</tr>
+{% endfor %}

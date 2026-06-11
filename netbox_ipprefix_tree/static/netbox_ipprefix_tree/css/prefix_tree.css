@@ -1,0 +1,254 @@
+.prefix-tree-page {
+    height: calc(100vh - 7rem);
+    overflow: hidden;
+}
+
+.prefix-tree-layout {
+    display: flex;
+    gap: 0;
+    align-items: stretch;
+    --prefix-tree-left-size: 33.333%;
+    height: calc(100% - 4.5rem);
+    overflow: hidden;
+}
+
+.prefix-tree-pane {
+    min-width: 0;
+    min-height: 0;
+}
+
+.prefix-tree-left-pane {
+    flex: 0 0 var(--prefix-tree-left-size);
+    max-width: var(--prefix-tree-left-size);
+    padding-right: 0.5rem;
+}
+
+.prefix-tree-resizer {
+    flex: 0 0 0.75rem;
+    cursor: col-resize;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    user-select: none;
+    touch-action: none;
+}
+
+.prefix-tree-resizer::before {
+    content: "";
+    width: 3px;
+    border-radius: 999px;
+    background: var(--bs-border-color, #dee2e6);
+}
+
+.prefix-tree-resizer:hover::before,
+.prefix-tree-resizer.prefix-tree-resizer-active::before {
+    background: var(--bs-primary, #0d6efd);
+}
+
+.prefix-tree-layout.prefix-tree-resizing {
+    cursor: col-resize;
+}
+
+.prefix-tree-layout.prefix-tree-resizing * {
+    user-select: none !important;
+}
+
+.prefix-tree-right-pane {
+    flex: 1 1 auto;
+    max-width: none;
+    padding-left: 0.5rem;
+}
+
+.prefix-tree-left-pane {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.prefix-tree-table-wrapper {
+    min-height: 0;
+    overflow: auto;
+}
+
+.prefix-tree-right-pane {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.prefix-detail-pane {
+    height: 100%;
+    overflow: auto;
+    padding-right: 0.25rem;
+}
+
+.tree-expand-icon {
+    width: 14px;
+    height: 14px;
+    margin-right: 2px;
+    vertical-align: middle;
+}
+
+.tree-row[data-has-children="true"] .tree-expand-icon {
+    cursor: pointer;
+}
+
+.tree-prefix-cell {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: max-content;
+}
+
+.tree-row {
+    cursor: pointer;
+}
+
+.tree-row a {
+    cursor: pointer;
+}
+
+/*
+ * Aggressively compact tree rows.
+ */
+.tree-row td {
+    padding-top: 0.5px !important;
+    padding-bottom: 0.5px !important;
+    padding-left: 0.4rem !important;
+    padding-right: 0.4rem !important;
+    line-height: 0.9 !important;
+    vertical-align: middle !important;
+    font-size: 0.85rem;
+}
+
+/*
+ * Reduce badge/tag padding in the compact tree only.
+ */
+#tree-body .badge,
+#tree-body .label,
+#tree-body .tag {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    line-height: 1.0 !important;
+}
+
+.tree-highlight {
+    background-color: rgba(255, 255, 0, 0.25) !important;
+}
+
+.tree-selected {
+    outline: 2px solid rgba(13, 110, 253, 0.35);
+    outline-offset: -2px;
+}
+
+.prefix-detail-loading {
+    opacity: 0.65;
+}
+
+.prefix-detail-grid {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0.35rem 1rem;
+}
+
+.prefix-detail-label {
+    font-weight: 600;
+    color: var(--bs-secondary-color, #6c757d);
+}
+
+.prefix-utilisation-progress {
+    position: relative;
+    max-width: 20rem;
+    min-height: 1.25rem;
+    overflow: visible;
+}
+
+.prefix-utilisation-progress-bar {
+    width: var(--prefix-utilisation);
+    border-top-left-radius: inherit;
+    border-bottom-left-radius: inherit;
+}
+
+.prefix-utilisation-progress-bar[style],
+.prefix-utilisation-progress-bar {
+    min-width: 0;
+}
+
+.prefix-utilisation-progress-label {
+    position: absolute;
+    left: clamp(1.5rem, calc(var(--prefix-utilisation) + 0.35rem), calc(100% - 3.5rem));
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    font-size: 0.75rem;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.prefix-ipaddress-card .card-body {
+    padding: 0;
+}
+
+.prefix-status-badge {
+    min-width: 4.5rem;
+}
+
+.prefix-status-active {
+    color: #fff;
+    background-color: var(--bs-primary, #0d6efd);
+}
+
+.prefix-status-available {
+    color: #fff;
+    background-color: var(--bs-success, #198754);
+}
+
+.prefix-status-reserved {
+    color: #fff;
+    background-color: var(--bs-info, #0dcaf0);
+}
+
+.prefix-status-deprecated {
+    color: #fff;
+    background-color: var(--bs-secondary, #6c757d);
+}
+
+.prefix-status-dhcp {
+    color: #000;
+    background-color: var(--bs-warning, #ffc107);
+}
+
+.prefix-ipaddress-card .table-container,
+.prefix-ipaddress-card table {
+    margin-bottom: 0;
+}
+
+@media (max-width: 1200px) {
+    .prefix-tree-page {
+        height: auto;
+        overflow: visible;
+    }
+
+    .prefix-tree-layout {
+        flex-direction: column;
+        height: auto;
+        overflow: visible;
+    }
+
+    .prefix-tree-left-pane,
+    .prefix-tree-right-pane {
+        flex-basis: auto;
+        max-width: 100%;
+        width: 100%;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .prefix-tree-resizer {
+        display: none;
+    }
+
+    .prefix-detail-pane {
+        height: auto;
+        overflow: visible;
+    }
+}

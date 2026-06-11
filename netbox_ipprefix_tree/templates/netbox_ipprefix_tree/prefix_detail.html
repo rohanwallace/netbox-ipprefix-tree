@@ -1,0 +1,112 @@
+{% load helpers %}
+<div class="card prefix-detail-card mb-3">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <strong>
+            <a href="{{ prefix.get_absolute_url }}">{{ prefix.prefix }}</a>
+        </strong>
+    </div>
+
+    <div class="card-body">
+        <div class="prefix-detail-grid">
+            <div class="prefix-detail-label">Utilisation</div>
+            <div>
+                {% if utilisation is not None %}
+                    <div class="progress prefix-utilisation-progress" style="--prefix-utilisation: {{ utilisation }}%;"
+                        role="progressbar" aria-valuenow="{{ utilisation }}" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar prefix-utilisation-progress-bar"></div>
+                        <span class="prefix-utilisation-progress-label">
+                            {{ utilisation_display }}
+                        </span>
+                    </div>
+                {% else %}
+                    <span class="text-muted">Unknown</span>
+                {% endif %}
+            </div>
+
+            <div class="prefix-detail-label">VLAN</div>
+            <div>{{ prefix.vlan|placeholder }}</div>
+
+            <div class="prefix-detail-label">Tenant</div>
+            <div>{{ prefix.tenant|placeholder }}</div>
+
+            <div class="prefix-detail-label">Scope</div>
+            <div>{{ prefix.scope|placeholder }}</div>
+
+            <div class="prefix-detail-label">Role</div>
+            <div>{{ prefix.role|placeholder }}</div>
+
+            <div class="prefix-detail-label">Description</div>
+            <div>{{ prefix.description|placeholder }}</div>
+
+        </div>
+    </div>
+</div>
+
+<div class="card prefix-ipaddress-card">
+
+    <div class="card-header">
+        <strong>IP Addresses</strong>
+    </div>
+
+    <div class="card-body table-responsive">
+        <table class="table table-hover table-sm prefix-ipaddress-table mb-0">
+            <thead>
+                <tr>
+                    <th>IP Address</th>
+                    <th>Status</th>
+                    <th>DNS Name</th>
+                    <th>Assigned To</th>
+                    <th>Tenant</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in ipaddress_rows %}
+                    {% if row.type == 'available' %}
+                        <tr class="prefix-available-row">
+                            <td>{{ row.display }}</td>
+                            <td>
+                                <span class="badge prefix-status-badge prefix-status-available">Available</span>
+                            </td>
+                            <td class="text-muted">&mdash;</td>
+                            <td class="text-muted">&mdash;</td>
+                            <td class="text-muted">&mdash;</td>
+                            <td class="text-muted">&mdash;</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td>
+                                <a href="{{ row.ip.get_absolute_url }}">
+                                    {{ row.ip.address }}
+                                </a>
+                            </td>
+                            <td>
+                                <span class="badge prefix-status-badge prefix-status-{{ row.status_value }}">
+                                    {{ row.ip.get_status_display|placeholder }}
+                                </span>
+                            </td>
+                            <td>{{ row.ip.dns_name|placeholder }}</td>
+                            <td>{{ row.ip.assigned_object|placeholder }}</td>
+                            <td>{{ row.ip.tenant|placeholder }}</td>
+                            <td>{{ row.ip.description|placeholder }}</td>
+                        </tr>
+                    {% endif %}
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-muted">
+                            No usable IP addresses are available for this prefix.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if available_truncated %}
+            <div class="small text-muted p-2">
+                Available range output was truncated to keep the detail pane responsive.
+            </div>
+        {% endif %}
+
+    </div>
+</div>

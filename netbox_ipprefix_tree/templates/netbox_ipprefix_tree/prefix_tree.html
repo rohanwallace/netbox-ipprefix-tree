@@ -1,0 +1,73 @@
+{% extends 'base/layout.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid prefix-tree-page">
+
+    <h1>Prefix Tree</h1>
+
+    <link rel="stylesheet" href="{% static 'netbox_ipprefix_tree/css/prefix_tree.css' %}">
+
+    <div class="prefix-tree-layout">
+        <div class="prefix-tree-pane prefix-tree-left-pane">
+            <div class="row mb-3">
+                <div class="col">
+                    <input type="text" id="prefix-search" class="form-control" placeholder="Search prefixes or descriptions">
+                </div>
+            </div>
+
+            <div class="prefix-tree-table-wrapper">
+                <table class="table table-hover table-headings align-middle">
+                    <thead>
+                        <tr>
+                            {% for column in table.columns %}
+                                <th>{{ column.header }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody id="tree-body">
+                        {% if multiple_vrfs %}
+                            {% for vrf in vrf_list %}
+                            <tr class="tree-row vrf-row" data-node-type="vrf" data-vrf-id="{{ vrf.id }}" data-prefix=""
+                                data-depth="0" data-expanded="false" data-has-children="true">
+                                <td>
+                                    <div class="tree-prefix-cell">
+                                        <img class="tree-expand-icon"
+                                            src="{% static 'netbox_ipprefix_tree/icons/collapsed.svg' %}" alt="Expand VRF"
+                                            role="button">
+                                        <span>{{ vrf.name }}</span>
+                                    </div>
+                                </td>
+                                {% for column in table.columns|slice:"1:" %}
+                                    <td></td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            {% include 'netbox_ipprefix_tree/prefix_rows.html' with table=table depth=0
+                                vrf=single_vrf_id %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="prefix-tree-resizer" class="prefix-tree-resizer" role="separator" aria-orientation="vertical"
+            aria-label="Resize prefix tree panes" tabindex="0">
+        </div>
+
+        <div class="prefix-tree-pane prefix-tree-right-pane">
+            <div id="prefix-detail-pane" class="prefix-detail-pane">
+                <div class="card">
+                    <div class="card-body text-muted">
+                        Select a prefix from the tree to view utilisation, VLAN,
+                        IP addresses and other prefix information.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'netbox_ipprefix_tree/js/prefix_tree.js' %}"></script>
+</div>
+{% endblock %}
