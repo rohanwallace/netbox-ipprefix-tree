@@ -13,7 +13,7 @@ The plugin builds and caches parent/child prefix relationships in a dedicated da
 - VRF-aware display
   - If multiple VRFs are present, each VRF is shown as a root node
   - If only one VRF or the global VRF is present, prefixes are shown directly at the root
-- Utilises a similar table layout to the IP Prefixes page, but with smaller prefix height to display more prefixes on the screen
+- Utilises a table layout that is a shortened version of the IP Prefixes page, but with smaller prefix height to display more prefixes on the screen
 - Search by prefix or description with automatic expansion of matching search results and highlighting of matched prefixes
 - Cached prefix hierarchy table for improved performance
 - Automatic rebuild of the prefix hierarchy table when prefixes are added, updated or deleted
