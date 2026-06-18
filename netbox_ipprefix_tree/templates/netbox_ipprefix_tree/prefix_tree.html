@@ -1,4 +1,5 @@
 {% extends 'base/layout.html' %}
+{% load helpers %}
 {% load static %}
 
 {% block content %}
@@ -13,6 +14,12 @@
             <div class="row mb-3 g-2 align-items-center">
                 <div class="col">
                     <input type="text" id="prefix-search" class="form-control" placeholder="Search prefixes or descriptions">
+                </div>
+                <div class="col-auto">
+                    <button type="button" class="btn btn-outline-secondary" title="Configure Table" aria-label="Configure Table"
+                        data-bs-toggle="modal" data-bs-target="#PrefixTreeTable_config">
+                        <i class="mdi mdi-cog" aria-hidden="true"></i>
+                    </button>
                 </div>
                 <div class="col-auto">
                     <button type="button" id="prefix-add-button" class="btn btn-primary"
@@ -36,8 +43,8 @@
                         {% if multiple_vrfs %}
                             {% for vrf in vrf_list %}
                             <tr class="tree-row vrf-row" data-node-type="vrf" data-vrf-id="{{ vrf.id }}" data-prefix=""
-                                data-depth="0" data-expanded="false" data-has-children="true">
-                                <td>
+                                data-depth="0" data-expanded="false" data-has-children="true" data-loaded="false">
+                                <td colspan="{{ table.columns|length }}">
                                     <div class="tree-prefix-cell">
                                         <img class="tree-expand-icon"
                                             src="{% static 'netbox_ipprefix_tree/icons/collapsed.svg' %}" alt="Expand VRF"
@@ -45,9 +52,6 @@
                                         <span>{{ vrf.name }}</span>
                                     </div>
                                 </td>
-                                {% for column in table.columns|slice:"1:" %}
-                                    <td></td>
-                                {% endfor %}
                             </tr>
                             {% endfor %}
                         {% else %}
@@ -90,3 +94,7 @@
     <script src="{% static 'netbox_ipprefix_tree/js/prefix_tree.js' %}"></script>
 </div>
 {% endblock %}
+{% block modals %}
+    {{ block.super }}
+    {% table_config_form table table_name="PrefixTreeTable" %}
+{% endblock modals %}
