@@ -10,9 +10,16 @@
 
     <div class="prefix-tree-layout">
         <div class="prefix-tree-pane prefix-tree-left-pane">
-            <div class="row mb-3">
+            <div class="row mb-3 g-2 align-items-center">
                 <div class="col">
                     <input type="text" id="prefix-search" class="form-control" placeholder="Search prefixes or descriptions">
+                </div>
+                <div class="col-auto">
+                    <button type="button" id="prefix-add-button" class="btn btn-primary"
+                        data-add-prefix-url="{% url 'ipam:prefix_add' %}">
+                        <i class="mdi mdi-plus-thick" aria-hidden="true"></i>
+                            Add
+                    </button>
                 </div>
             </div>
 
@@ -65,6 +72,18 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="prefix-tree-modal" class="prefix-tree-modal" hidden aria-hidden="true">
+        <div class="prefix-tree-modal-backdrop" data-prefix-tree-modal-close></div>
+        <div class="prefix-tree-modal-dialog" role="dialog" aria-modal="true" aria-label="NetBox form">
+            <button type="button" class="prefix-tree-modal-close" data-prefix-tree-modal-close aria-label="Close"
+                title="Close">
+                &times;
+            </button>
+            <iframe id="prefix-tree-modal-frame" class="prefix-tree-modal-frame" title="NetBox form"
+                data-strip-netbox-navigation="true"></iframe>
         </div>
     </div>
 
