@@ -1,4 +1,5 @@
 const prefixCache = {};
+let prefixTreeModalCloseCallback = null;
 
 const ICONS = {
     collapsed: "/static/netbox_ipprefix_tree/icons/collapsed.svg",
@@ -456,9 +457,396 @@ function bindPaneResizer() {
     });
 }
 
+function clearPrefixCache() {
+    Object.keys(prefixCache).forEach(key => {
+        delete prefixCache[key];
+    });
+}
+
+function getExpandedTreeState() {
+    const expandedVrfs = [];
+    const expandedPrefixes = [];
+
+    document
+        .querySelectorAll("tr.tree-row[data-expanded='true']")
+        .forEach(row => {
+            if (row.dataset.nodeType === "vrf") {
+                expandedVrfs.push({
+                    vrfId: row.dataset.vrfId,
+                    depth: getRowDepth(row),
+                });
+                return;
+            }
+
+            if (row.dataset.nodeType === "prefix") {
+                expandedPrefixes.push({
+                    prefixId: row.dataset.prefixId,
+                    vrfId: row.dataset.vrfId,
+                    depth: getRowDepth(row),
+                });
+            }
+        });
+
+    expandedPrefixes.sort((a, b) => a.depth - b.depth);
+
+    return {
+        expandedVrfs,
+        expandedPrefixes,
+    };
+}
+
+function getSelectedPrefixRow() {
+    return document.querySelector(
+        "tr.tree-row.tree-selected[data-node-type='prefix']"
+    );
+}
+
+function getSelectedPrefixId() {
+    const selectedRow = getSelectedPrefixRow();
+
+    if (!selectedRow) {
+        return null;
+    }
+
+    return selectedRow.dataset.prefixId || null;
+}
+
+async function refreshPrefixTreePreservingState() {
+    const state = getExpandedTreeState();
+    const selectedPrefixId = getSelectedPrefixId();
+
+    let response;
+
+    try {
+        response = await fetch(window.location.href, {
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+            },
+        });
+    } catch (err) {
+        console.error("Failed to refresh prefix tree:", err);
+        return;
+    }
+
+    if (!response.ok) {
+        console.error(
+            "Failed to refresh prefix tree. HTTP status:",
+            response.status
+        );
+        return;
+    }
+
+    const html = await response.text();
+    const parser = new DOMParser();
+    const newDocument = parser.parseFromString(html, "text/html");
+
+    const currentTreeBody = document.getElementById("tree-body");
+    const newTreeBody = newDocument.getElementById("tree-body");
+
+    if (!currentTreeBody || !newTreeBody) {
+        console.error("Unable to refresh prefix tree; tree body not found.");
+        return;
+    }
+
+    currentTreeBody.replaceWith(newTreeBody);
+    clearPrefixCache();
+
+    for (const vrfState of state.expandedVrfs) {
+        const vrfRow = document.querySelector(
+            `tr.tree-row[data-node-type="vrf"][data-vrf-id="${vrfState.vrfId}"]`
+        );
+
+        if (vrfRow) {
+            await expand(vrfRow, "", getRowDepth(vrfRow));
+        }
+    }
+
+    for (const prefixState of state.expandedPrefixes) {
+        const prefixRow = document.querySelector(
+            `tr.tree-row[data-node-type="prefix"][data-prefix-id="${prefixState.prefixId}"][data-vrf-id="${prefixState.vrfId}"]`
+        );
+
+        if (
+            prefixRow &&
+            prefixRow.dataset.hasChildren === "true" &&
+            prefixRow.dataset.expanded !== "true"
+        ) {
+            await expand(
+                prefixRow,
+                prefixRow.dataset.prefix,
+                getRowDepth(prefixRow)
+            );
+        }
+    }
+
+    if (selectedPrefixId) {
+        const selectedRow = document.querySelector(
+            `tr.tree-row[data-node-type="prefix"][data-prefix-id="${selectedPrefixId}"]`
+        );
+
+        if (selectedRow) {
+            setSelectedRow(selectedRow);
+            await loadPrefixDetail(selectedRow);
+        }
+    }
+}
+
+async function refreshCurrentPrefixDetail() {
+    const selectedRow = getSelectedPrefixRow();
+
+    if (!selectedRow) {
+        return;
+    }
+
+    await loadPrefixDetail(selectedRow);
+}
+
+function stripNetBoxNavigationFromIframe(frame) {
+    if (!frame || !frame.dataset.stripNetboxNavigation) {
+        return;
+    }
+
+    let iframeDocument;
+
+    try {
+        iframeDocument = frame.contentDocument || frame.contentWindow.document;
+    } catch (err) {
+        console.warn("Unable to access iframe document:", err);
+        return;
+    }
+
+    if (!iframeDocument || !iframeDocument.head || !iframeDocument.body) {
+        return;
+    }
+
+    if (!iframeDocument.getElementById("prefix-tree-modal-strip-style")) {
+        const style = iframeDocument.createElement("style");
+        style.id = "prefix-tree-modal-strip-style";
+
+        style.textContent = `
+            nav,
+            header,
+            footer,
+            aside,
+            .navbar,
+            .navbar-fixed-top,
+            .navbar-brand,
+            .sidebar,
+            .sidebar-wrapper,
+            .sidenav,
+            .side-nav,
+            .nav-sidebar,
+            .layout-sidebar,
+            .offcanvas,
+            .breadcrumb,
+            .page-header,
+            .noprint {
+                display: none !important;
+            }
+
+            body {
+                padding: 0 !important;
+                margin: 0 !important;
+                overflow: auto !important;
+                background: var(--bs-body-bg, #fff) !important;
+            }
+
+            main,
+            .main,
+            .content,
+            .content-wrapper,
+            .page-content,
+            .container,
+            .container-fluid {
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+                max-width: none !important;
+                width: 100% !important;
+            }
+
+            .wrapper,
+            .layout-wrapper,
+            .main-wrapper,
+            .content-wrapper {
+                margin-left: 0 !important;
+                padding-left: 0 !important;
+                max-width: none !important;
+                width: 100% !important;
+            }
+        `;
+
+        iframeDocument.head.appendChild(style);
+    }
+
+    [
+        "nav",
+        "header",
+        "footer",
+        "aside",
+        ".navbar",
+        ".sidebar",
+        ".sidebar-wrapper",
+        ".sidenav",
+        ".side-nav",
+        ".nav-sidebar",
+        ".layout-sidebar",
+        ".offcanvas",
+        ".breadcrumb"
+    ].forEach(selector => {
+        iframeDocument.querySelectorAll(selector).forEach(element => {
+            element.remove();
+        });
+    });
+
+    /*
+     * Remove NetBox's native Cancel button inside modal forms.
+     * The modal already has its own close button in the top-right corner.
+     */
+    iframeDocument
+        .querySelectorAll("a, button, input[type='button'], input[type='submit']")
+        .forEach(element => {
+            const text = (
+                element.textContent ||
+                element.value ||
+                ""
+            ).trim().toLowerCase();
+
+            if (text === "cancel") {
+                element.remove();
+            }
+        });
+}
+
+function openPrefixTreeModal(url, onClose) {
+    const modal = document.getElementById("prefix-tree-modal");
+    const frame = document.getElementById("prefix-tree-modal-frame");
+
+    if (!modal || !frame) {
+        console.error("Prefix tree modal elements not found.");
+        return;
+    }
+
+    prefixTreeModalCloseCallback = onClose || null;
+
+    frame.onload = function() {
+        stripNetBoxNavigationFromIframe(frame);
+    };
+
+    frame.src = url;
+    modal.hidden = false;
+    modal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("prefix-tree-modal-open");
+}
+
+async function closePrefixTreeModal() {
+    const modal = document.getElementById("prefix-tree-modal");
+    const frame = document.getElementById("prefix-tree-modal-frame");
+
+    if (!modal || !frame) {
+        return;
+    }
+
+    modal.hidden = true;
+    modal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("prefix-tree-modal-open");
+
+    frame.onload = null;
+    frame.src = "about:blank";
+
+    if (typeof prefixTreeModalCloseCallback === "function") {
+        const callback = prefixTreeModalCloseCallback;
+        prefixTreeModalCloseCallback = null;
+        await callback();
+    }
+}
+
+function bindPrefixTreeModal() {
+    document
+        .querySelectorAll("[data-prefix-tree-modal-close]")
+        .forEach(closeElement => {
+            closeElement.addEventListener("click", async function(e) {
+                e.preventDefault();
+                await closePrefixTreeModal();
+            });
+        });
+
+    document.addEventListener("keydown", async function(e) {
+        if (e.key !== "Escape") {
+            return;
+        }
+
+        const modal = document.getElementById("prefix-tree-modal");
+
+        if (modal && !modal.hidden) {
+            e.preventDefault();
+            await closePrefixTreeModal();
+        }
+    });
+}
+
+function bindAddPrefixButton() {
+    const addButton = document.getElementById("prefix-add-button");
+
+    if (!addButton) {
+        return;
+    }
+
+    addButton.addEventListener("click", function(e) {
+        e.preventDefault();
+
+        const addPrefixUrl = addButton.dataset.addPrefixUrl;
+
+        if (!addPrefixUrl) {
+            console.error("Add prefix URL not found.");
+            return;
+        }
+
+        openPrefixTreeModal(
+            addPrefixUrl,
+            refreshPrefixTreePreservingState
+        );
+    });
+}
+
+function bindAddIpAddressButton() {
+    document.addEventListener("click", function(e) {
+        const addButton = e.target.closest(".prefix-add-ip-address-button");
+
+        if (!addButton) {
+            return;
+        }
+
+        e.preventDefault();
+
+        const addIpAddressUrl = addButton.dataset.addIpAddressUrl;
+
+        if (!addIpAddressUrl) {
+            console.error("Add IP address URL not found.");
+            return;
+        }
+
+        const prefixId = addButton.dataset.prefixId || getSelectedPrefixId();
+        const url = new URL(addIpAddressUrl, window.location.origin);
+
+        if (prefixId) {
+            url.searchParams.set("prefix", prefixId);
+        }
+
+        openPrefixTreeModal(
+            url.toString(),
+            refreshCurrentPrefixDetail
+        );
+    });
+}
+
 function bindPrefixTreePage() {
     bindPrefixSearch();
     bindPaneResizer();
+    bindPrefixTreeModal();
+    bindAddPrefixButton();
+    bindAddIpAddressButton();
 }
 
 if (document.readyState === "loading") {
