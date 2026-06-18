@@ -1,0 +1,18 @@
+# Python bytecode/cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python package/build metadata
+*.egg-info/
+.eggs/
+*.egg
+
+# Build/distribution output
+build/
+dist/
+
+# Virtual environments, optional but recommended
+.venv/
+venv/
+env/

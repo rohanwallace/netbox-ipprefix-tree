@@ -5,7 +5,7 @@ from django.template.loader import render_to_string
 from django.db import connection
 import ipaddress
 from ipam.models import IPAddress, Prefix, VRF
-from ipam.tables import PrefixTable
+from .tables import PrefixTreeTable
 
 
 GLOBAL_VRF_ID = "global"
@@ -21,25 +21,10 @@ def configure_table(table, request):
 
 
 def build_prefix_tree_table(qs, request):
-    """Build the compact tree table used in the left pane.
+    """Build the restricted, configurable tree table used in the left pane."""
 
-    The tree navigation intentionally shows limited field information to 
-    avoid the left pane too wide. Prefix details are loaded into the right
-    pane when a prefix row is selected.
-    """
-
-    visible_columns = {
-        "prefix",
-        "status",
-        "description",
-    }
-
-    table = PrefixTable(qs)
+    table = PrefixTreeTable(qs)
     table = configure_table(table, request)
-
-    for column in list(table.columns):
-        if column.name not in visible_columns:
-            table.columns.hide(column.name)
 
     return table
 
