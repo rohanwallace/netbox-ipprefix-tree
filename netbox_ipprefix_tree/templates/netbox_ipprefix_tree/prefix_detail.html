@@ -1,4 +1,5 @@
 {% load helpers %}
+{% load render_table from django_tables2 %}
 <div class="card prefix-detail-card mb-3">
 
     <div class="card-header d-flex justify-content-between align-items-center">
@@ -54,63 +55,6 @@
     </div>
 
     <div class="card-body table-responsive">
-        <table class="table table-hover table-sm prefix-ipaddress-table mb-0">
-            <thead>
-                <tr>
-                    <th>IP Address</th>
-                    <th>Status</th>
-                    <th>DNS Name</th>
-                    <th>Assigned To</th>
-                    <th>Tenant</th>
-                    <th>Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in ipaddress_rows %}
-                    {% if row.type == 'available' %}
-                        <tr class="prefix-available-row">
-                            <td>{{ row.display }}</td>
-                            <td>
-                                <span class="badge prefix-status-badge prefix-status-available">Available</span>
-                            </td>
-                            <td class="text-muted">&mdash;</td>
-                            <td class="text-muted">&mdash;</td>
-                            <td class="text-muted">&mdash;</td>
-                            <td class="text-muted">&mdash;</td>
-                        </tr>
-                    {% else %}
-                        <tr>
-                            <td>
-                                <a href="{{ row.ip.get_absolute_url }}">
-                                    {{ row.ip.address }}
-                                </a>
-                            </td>
-                            <td>
-                                <span class="badge prefix-status-badge prefix-status-{{ row.status_value }}">
-                                    {{ row.ip.get_status_display|placeholder }}
-                                </span>
-                            </td>
-                            <td>{{ row.ip.dns_name|placeholder }}</td>
-                            <td>{{ row.ip.assigned_object|placeholder }}</td>
-                            <td>{{ row.ip.tenant|placeholder }}</td>
-                            <td>{{ row.ip.description|placeholder }}</td>
-                        </tr>
-                    {% endif %}
-                {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-muted">
-                            No usable IP addresses are available for this prefix.
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        {% if available_truncated %}
-            <div class="small text-muted p-2">
-                Available range output was truncated to keep the detail pane responsive.
-            </div>
-        {% endif %}
-
+        {% render_table ipaddress_table 'inc/table.html' %}
     </div>
 </div>
