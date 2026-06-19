@@ -3,8 +3,9 @@ from django.views import View
 from django.http import Http404, HttpResponse, JsonResponse
 from django.template.loader import render_to_string
 from django.db import connection
-import ipaddress
-from ipam.models import IPAddress, Prefix, VRF
+from ipam.models import Prefix, VRF
+from ipam.tables import AnnotatedIPAddressTable
+from ipam.utils import annotate_ip_space
 from .tables import PrefixTreeTable
 
 
@@ -59,170 +60,21 @@ def format_percent(value):
 
     return f"{value:.1f}%"
 
+def build_prefix_ipaddress_table(prefix, request):
+    """Build the native NetBox-style IP address table for a prefix.
 
-def get_prefix_ipaddress_queryset(prefix, request):
-    """Return IP addresses assigned under the selected prefix by using the
-    VRF of the selected prefix and PostgreSQL's cidr containment operator (<<=)
+    This mirrors the behaviour of NetBox's native prefix IP addresses tab by
+    using AnnotatedIPAddressTable with annotate_ip_space().  This gives us
+    normal IP address rows plus NetBox's synthetic available-space rows.
     """
 
-    params = [str(prefix.prefix)]
+    table = AnnotatedIPAddressTable(
+        data=annotate_ip_space(prefix),
+        orderable=False,
+    )
+    table.configure(request)
 
-    if prefix.vrf_id is None:
-        vrf_clause = "vrf_id IS NULL"
-    else:
-        vrf_clause = "vrf_id = %s"
-        params.append(prefix.vrf_id)
-
-    with connection.cursor() as cursor:
-        cursor.execute(
-            f"""
-            SELECT id
-            FROM ipam_ipaddress
-            WHERE
-                address <<= %s::cidr
-                AND {vrf_clause}
-            ORDER BY
-                family(address),
-                address
-            """,
-            params,
-        )
-        ipaddress_ids = [row[0] for row in cursor.fetchall()]
-
-    queryset = IPAddress.objects.filter(pk__in=ipaddress_ids)
-
-    if hasattr(queryset, "restrict"):
-        queryset = queryset.restrict(request.user, "view")
-
-    return queryset.select_related(
-        "vrf",
-        "tenant",
-        "assigned_object_type",
-    ).order_by("address")
-
-
-def parse_ip_address(value):
-    """Return the host address component from a NetBox IPAddress.address value."""
-
-    return ipaddress.ip_interface(str(value)).ip
-
-
-def format_available_range(start, end):
-    """Format an available IP or contiguous IP range for display."""
-
-    if start == end:
-        return str(start)
-
-    return f"{start} - {end}"
-
-
-def get_prefix_usable_bounds(prefix):
-    """Return first and last usable addresses for a prefix."""
-
-    network = ipaddress.ip_network(str(prefix.prefix), strict=False)
-
-    first = int(network.network_address)
-    last = int(network.broadcast_address)
-
-    # /31 and /32 subnets are point-to-point & host routes and we don't need to worry
-    # about their network and broadcast addresses. All larger subnets (length < 31)
-    # should update the usable addresses to ignore network and broadcast addresses
-    if network.version == 4 and network.prefixlen < 31:
-        first += 1
-        last -= 1
-
-    if first > last:
-        return network, None, None
-
-    return network, first, last
-
-
-def build_prefix_ipaddress_rows(prefix, request, max_available_ranges=254):
-    """Build a sorted list of used and available IPs.
-    The list is limited to 254 entries so as to fully display a /24 network
-    while not being too large to cause undue stress on the browser trying to
-    display the list of prefixes
-    """
-
-    network, first, last = get_prefix_usable_bounds(prefix)
-    ipaddress_queryset = list(get_prefix_ipaddress_queryset(prefix, request))
-
-    used_items = []
-    used_positions = set()
-
-    for ip_obj in ipaddress_queryset:
-        try:
-            host_ip = parse_ip_address(ip_obj.address)
-        except ValueError:
-            continue
-
-        host_int = int(host_ip)
-
-        if first is not None and first <= host_int <= last:
-            used_positions.add(host_int)
-            used_items.append(
-                {
-                    "type": "used",
-                    "sort": host_int,
-                    "ip": ip_obj,
-                    "display": str(ip_obj.address),
-                    "status_value": str(getattr(ip_obj.status, "value", ip_obj.status)).lower(),
-                }
-            )
-
-    rows = []
-    sorted_used = sorted(used_positions)
-    cursor = first
-    available_count = 0
-    truncated = False
-
-    if cursor is not None:
-        for used_int in sorted_used:
-            if cursor < used_int:
-                if available_count >= max_available_ranges:
-                    truncated = True
-                    break
-
-                start_ip = ipaddress.ip_address(cursor)
-                end_ip = ipaddress.ip_address(used_int - 1)
-                rows.append(
-                    {
-                        "type": "available",
-                        "sort": cursor,
-                        "start": start_ip,
-                        "end": end_ip,
-                        "display": format_available_range(start_ip, end_ip),
-                    }
-                )
-                available_count += 1
-
-            cursor = max(cursor, used_int + 1)
-
-        if not truncated and cursor <= last:
-            if available_count < max_available_ranges:
-                start_ip = ipaddress.ip_address(cursor)
-                end_ip = ipaddress.ip_address(last)
-                rows.append(
-                    {
-                        "type": "available",
-                        "sort": cursor,
-                        "start": start_ip,
-                        "end": end_ip,
-                        "display": format_available_range(start_ip, end_ip),
-                    }
-                )
-            else:
-                truncated = True
-
-    rows.extend(used_items)
-    rows.sort(key=lambda row: (row["sort"], 0 if row["type"] == "available" else 1))
-
-    return {
-        "rows": rows,
-        "available_truncated": truncated,
-        "network": network,
-    }
-
+    return table
 
 class PrefixTreeView(TemplateView):
     template_name = "netbox_ipprefix_tree/prefix_tree.html"
@@ -427,16 +279,16 @@ class PrefixDetailView(View):
             raise Http404("Prefix not found") from exc
 
         utilisation = get_prefix_utilisation(prefix)
-        ipaddress_data = build_prefix_ipaddress_rows(prefix, request)
+        ipaddress_table = build_prefix_ipaddress_table(prefix, request)
 
         html = render_to_string(
             "netbox_ipprefix_tree/prefix_detail.html",
             {
+                "object": prefix,
                 "prefix": prefix,
                 "utilisation": utilisation,
                 "utilisation_display": format_percent(utilisation),
-                "ipaddress_rows": ipaddress_data["rows"],
-                "available_truncated": ipaddress_data["available_truncated"],
+                "ipaddress_table": ipaddress_table,
             },
             request=request,
         )
