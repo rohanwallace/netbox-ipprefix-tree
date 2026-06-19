@@ -155,27 +155,27 @@
     color: var(--bs-secondary-color, #6c757d);
 }
 
-.prefix-utilisation-progress {
+.prefix-utilization-progress {
     position: relative;
     max-width: 20rem;
     min-height: 1.25rem;
     overflow: visible;
 }
 
-.prefix-utilisation-progress-bar {
-    width: var(--prefix-utilisation);
+.prefix-utilization-progress-bar {
+    width: var(--prefix-utilization);
     border-top-left-radius: inherit;
     border-bottom-left-radius: inherit;
 }
 
-.prefix-utilisation-progress-bar[style],
-.prefix-utilisation-progress-bar {
+.prefix-utilization-progress-bar[style],
+.prefix-utilization-progress-bar {
     min-width: 0;
 }
 
-.prefix-utilisation-progress-label {
+.prefix-utilization-progress-label {
     position: absolute;
-    left: clamp(1.5rem, calc(var(--prefix-utilisation) + 0.35rem), calc(100% - 3.5rem));
+    left: clamp(1.5rem, calc(var(--prefix-utilization) + 0.35rem), calc(100% - 3.5rem));
     top: 50%;
     transform: translateY(-50%);
     z-index: 2;

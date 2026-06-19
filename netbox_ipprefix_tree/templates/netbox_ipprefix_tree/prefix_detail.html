@@ -10,14 +10,14 @@
 
     <div class="card-body">
         <div class="prefix-detail-grid">
-            <div class="prefix-detail-label">Utilisation</div>
+            <div class="prefix-detail-label">Utilization</div>
             <div>
-                {% if utilisation is not None %}
-                    <div class="progress prefix-utilisation-progress" style="--prefix-utilisation: {{ utilisation }}%;"
-                        role="progressbar" aria-valuenow="{{ utilisation }}" aria-valuemin="0" aria-valuemax="100">
-                        <div class="progress-bar prefix-utilisation-progress-bar"></div>
-                        <span class="prefix-utilisation-progress-label">
-                            {{ utilisation_display }}
+                {% if utilization is not None %}
+                    <div class="progress prefix-utilization-progress" style="--prefix-utilization: {{ utilization }}%;"
+                        role="progressbar" aria-valuenow="{{ utilization }}" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar prefix-utilization-progress-bar"></div>
+                        <span class="prefix-utilization-progress-label">
+                            {{ utilization_display }}
                         </span>
                     </div>
                 {% else %}
