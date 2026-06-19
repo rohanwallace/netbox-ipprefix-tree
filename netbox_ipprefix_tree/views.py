@@ -30,21 +30,21 @@ def build_prefix_tree_table(qs, request):
     return table
 
 
-def get_prefix_utilisation(prefix):
-    """Return prefix utilisation percentage as a float roudned to 1 decimal place."""
+def get_prefix_utilization(prefix):
+    """Return prefix utilization percentage as a float roudned to 1 decimal place."""
 
-    utilisation = None
+    utilization = None
 
-    if hasattr(prefix, "get_utilisation"):
-        utilisation = prefix.get_utilisation()
-    elif hasattr(prefix, "utilisation"):
-        utilisation = prefix.utilisation
+    if hasattr(prefix, "get_utilization"):
+        utilization = prefix.get_utilization()
+    elif hasattr(prefix, "utilization"):
+        utilization = prefix.utilization
 
-    if utilisation is None:
+    if utilization is None:
         return None
 
     try:
-        return round(float(utilisation), 1)
+        return round(float(utilization), 1)
     except (TypeError, ValueError):
         return None
 
@@ -278,7 +278,7 @@ class PrefixDetailView(View):
         except Prefix.DoesNotExist as exc:
             raise Http404("Prefix not found") from exc
 
-        utilisation = get_prefix_utilisation(prefix)
+        utilization = get_prefix_utilization(prefix)
         ipaddress_table = build_prefix_ipaddress_table(prefix, request)
 
         html = render_to_string(
@@ -286,8 +286,8 @@ class PrefixDetailView(View):
             {
                 "object": prefix,
                 "prefix": prefix,
-                "utilisation": utilisation,
-                "utilisation_display": format_percent(utilisation),
+                "utilization": utilization,
+                "utilization_display": format_percent(utilization),
                 "ipaddress_table": ipaddress_table,
             },
             request=request,
