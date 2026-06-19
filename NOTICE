@@ -1,9 +1,11 @@
 NetBox IP Prefix Tree
-
 Copyright 2026 Rohan Wallace
 
 This product includes software developed as part of the NetBox IP Prefix Tree project.
 
-Portions of derivative works based on this project may originate from this project and should preserve this notice where required by the Apache License 2.0.
+Redistributions and derivative works that include this project, or portions of this project,
+must include a readable copy of the attribution notices contained in this NOTICE file where
+required by Section 4(d) of the Apache License, Version 2.0.
 
-This project was developed with assistance from AI-based coding tools. All AI-assisted code has been reviewed and incorporated by the project maintainer.
+This project was developed with assistance from AI-based coding tools. All AI-assisted code
+has been reviewed and incorporated by the project maintainer.

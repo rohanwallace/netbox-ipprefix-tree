@@ -17,21 +17,24 @@ The plugin builds and caches parent/child prefix relationships in a dedicated da
 - Search by prefix or description with automatic expansion of matching search results and highlighting of matched prefixes
 - Cached prefix hierarchy table for improved performance
 - Automatic rebuild of the prefix hierarchy table when prefixes are added, updated or deleted
+- Allows the user to add an IP address or Prefix using a popup modal, without having to navigate away from the tree view
 
 ## Requirements
 
-- NetBox 4.5.x or later
+- NetBox 4.5.0 or later
 - Python 3.12 or later
-- PostgreSQL
+- PostgreSQL 14 or later
 - PostgreSQL extensions:
   - `pg_trgm`
   - `btree_gist`
 
-The plugin is currently intended for use with NetBox 4.5.x. Compatibility with earlier or later NetBox versions should be tested before production use.
+The plugin is currently intended for use with NetBox 4.5.x and 4.6.x. Compatibility with earlier or later NetBox versions should be tested before production use.
 
 ## Installation
 
-To install the package into the NetBox virtual environment, download the latest .tar.gz from GitHub and decompress it.
+To install the package into the NetBox virtual environment:
+
+a) download the latest .tar.gz from GitHub and decompress it.
 
 Then run the following commands:
 
@@ -39,6 +42,18 @@ Then run the following commands:
 cd /path/to/netbox-ipprefix-tree
 sudo /opt/netbox/venv/bin/pip install .
 ```
+
+or 
+
+b) download the latest pip package from Github
+
+Then run the following commands:
+
+```bash
+cd /path/to/pip-package
+sudo /opt/netbox/venv/bin/pip install netbox_ipprefix_tree-<version>-py3-none-any.whl
+```
+
 
 ## Enable the Plugin
 
