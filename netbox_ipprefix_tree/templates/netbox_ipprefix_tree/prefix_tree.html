@@ -55,8 +55,7 @@
                             </tr>
                             {% endfor %}
                         {% else %}
-                            {% include 'netbox_ipprefix_tree/prefix_rows.html' with table=table depth=0
-                                vrf=single_vrf_id %}
+                            {% include 'netbox_ipprefix_tree/prefix_rows.html' with table=table depth=0 vrf=single_vrf_id %}
                         {% endif %}
                     </tbody>
                 </table>
