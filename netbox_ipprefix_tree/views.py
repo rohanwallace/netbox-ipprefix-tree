@@ -113,10 +113,9 @@ class PrefixTreeView(TemplateView):
 
         # Single VRF optimization
         if not multiple_vrfs and vrf_list:
-            #single_vrf_id = vrf_list[0]["id"]
-            #context["single_vrf_id"] = single_vrf_id
-            #roots = get_children(prefix=None, vrf=single_vrf_id)
-            roots = get_children(prefix=None, vrf=GLOBAL_VRF_ID)
+            single_vrf_id = vrf_list[0]["id"]
+            context["single_vrf_id"] = single_vrf_id
+            roots = get_children(prefix=None, vrf=single_vrf_id)
             context["table"] = build_prefix_tree_table(roots, self.request)
 
         return context
